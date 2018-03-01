@@ -660,9 +660,8 @@ func (p *OAuthProxy) Authenticate(rw http.ResponseWriter, req *http.Request) int
 		}
 	}
 
-	if len(p.ApiKeys) > 0 {
-		apiKey := req.Header.Get("apiKey")
-		if apiKey != "" {
+	if apiKey := req.Header.Get("apiKey"); apiKey != "" {
+		if len(p.ApiKeys) > 0 {
 			for _, trustedKey := range p.ApiKeys {
 				if trustedKey == apiKey {
 					return http.StatusAccepted
