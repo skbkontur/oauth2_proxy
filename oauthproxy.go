@@ -662,10 +662,13 @@ func (p *OAuthProxy) Authenticate(rw http.ResponseWriter, req *http.Request) int
 
 	if apiKey := req.Header.Get("apiKey"); apiKey != "" {
 		if len(p.ApiKeys) > 0 {
-			for _, trustedKey := range p.ApiKeys {
-				if trustedKey == apiKey {
-					return http.StatusAccepted
-				}
+			log.Printf("processing api key: %s from: %s", apiKey, req.RemoteAddr)
+			switch p.CheckIfApiKeyIsValid(apiKey) {
+			case true:
+				log.Printf("api key: %s is valid", apiKey)
+				return http.StatusAccepted
+			default:
+				log.Printf("api key: %s is invalid", apiKey)
 			}
 		}
 	}
@@ -731,4 +734,13 @@ func (p *OAuthProxy) CheckBasicAuth(req *http.Request) (*providers.SessionState,
 		return &providers.SessionState{User: pair[0]}, nil
 	}
 	return nil, fmt.Errorf("%s not in HtpasswdFile", pair[0])
+}
+
+func (p *OAuthProxy) CheckIfApiKeyIsValid(apiKey string) bool {
+	for _, validKey := range p.ApiKeys {
+		if validKey == apiKey {
+			return true
+		}
+	}
+	return false
 }
