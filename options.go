@@ -97,7 +97,6 @@ type SignatureData struct {
 
 func NewOptions() *Options {
 	return &Options{
-		ApiKeys:             []string{},
 		ProxyPrefix:         "/oauth2",
 		HttpAddress:         "127.0.0.1:4180",
 		HttpsAddress:        ":443",
