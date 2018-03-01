@@ -40,6 +40,8 @@ type Options struct {
 	CustomTemplatesDir       string   `flag:"custom-templates-dir" cfg:"custom_templates_dir"`
 	Footer                   string   `flag:"footer" cfg:"footer"`
 
+	ApiKeys []string `flag:"api-keys" cfg:"api_keys" env:"OAUTH2_PROXY_API_KEYS"`
+
 	CookieName     string        `flag:"cookie-name" cfg:"cookie_name" env:"OAUTH2_PROXY_COOKIE_NAME"`
 	CookieSecret   string        `flag:"cookie-secret" cfg:"cookie_secret" env:"OAUTH2_PROXY_COOKIE_SECRET"`
 	CookieDomain   string        `flag:"cookie-domain" cfg:"cookie_domain" env:"OAUTH2_PROXY_COOKIE_DOMAIN"`
@@ -48,17 +50,17 @@ type Options struct {
 	CookieSecure   bool          `flag:"cookie-secure" cfg:"cookie_secure"`
 	CookieHttpOnly bool          `flag:"cookie-httponly" cfg:"cookie_httponly"`
 
-	Upstreams             []string            `flag:"upstream" cfg:"upstreams"`
-	SkipAuthRegex         []string            `flag:"skip-auth-regex" cfg:"skip_auth_regex"`
-	PassBasicAuth         bool                `flag:"pass-basic-auth" cfg:"pass_basic_auth"`
-	BasicAuthPassword     string              `flag:"basic-auth-password" cfg:"basic_auth_password"`
-	PassAccessToken       bool                `flag:"pass-access-token" cfg:"pass_access_token"`
-	PassHostHeader        bool                `flag:"pass-host-header" cfg:"pass_host_header"`
-	SkipProviderButton    bool                `flag:"skip-provider-button" cfg:"skip_provider_button"`
-	PassUserHeaders       bool                `flag:"pass-user-headers" cfg:"pass_user_headers"`
-	SSLInsecureSkipVerify bool                `flag:"ssl-insecure-skip-verify" cfg:"ssl_insecure_skip_verify"`
-	SetXAuthRequest       bool                `flag:"set-xauthrequest" cfg:"set_xauthrequest"`
-	SkipAuthPreflight     bool                `flag:"skip-auth-preflight" cfg:"skip_auth_preflight"`
+	Upstreams             []string `flag:"upstream" cfg:"upstreams"`
+	SkipAuthRegex         []string `flag:"skip-auth-regex" cfg:"skip_auth_regex"`
+	PassBasicAuth         bool     `flag:"pass-basic-auth" cfg:"pass_basic_auth"`
+	BasicAuthPassword     string   `flag:"basic-auth-password" cfg:"basic_auth_password"`
+	PassAccessToken       bool     `flag:"pass-access-token" cfg:"pass_access_token"`
+	PassHostHeader        bool     `flag:"pass-host-header" cfg:"pass_host_header"`
+	SkipProviderButton    bool     `flag:"skip-provider-button" cfg:"skip_provider_button"`
+	PassUserHeaders       bool     `flag:"pass-user-headers" cfg:"pass_user_headers"`
+	SSLInsecureSkipVerify bool     `flag:"ssl-insecure-skip-verify" cfg:"ssl_insecure_skip_verify"`
+	SetXAuthRequest       bool     `flag:"set-xauthrequest" cfg:"set_xauthrequest"`
+	SkipAuthPreflight     bool     `flag:"skip-auth-preflight" cfg:"skip_auth_preflight"`
 
 	// These options allow for other providers besides Google, with
 	// potential overrides.
@@ -95,6 +97,7 @@ type SignatureData struct {
 
 func NewOptions() *Options {
 	return &Options{
+		ApiKeys:             []string{},
 		ProxyPrefix:         "/oauth2",
 		HttpAddress:         "127.0.0.1:4180",
 		HttpsAddress:        ":443",

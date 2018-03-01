@@ -35,6 +35,8 @@ var SignatureHeaders []string = []string{
 }
 
 type OAuthProxy struct {
+	ApiKeys []string
+
 	CookieSeed     string
 	CookieName     string
 	CSRFCookieName string
@@ -176,6 +178,7 @@ func NewOAuthProxy(opts *Options, validator func(string) bool) *OAuthProxy {
 	}
 
 	return &OAuthProxy{
+		ApiKeys:        opts.ApiKeys,
 		CookieName:     opts.CookieName,
 		CSRFCookieName: fmt.Sprintf("%v_%v", opts.CookieName, "csrf"),
 		CookieSeed:     opts.CookieSecret,
@@ -657,8 +660,15 @@ func (p *OAuthProxy) Authenticate(rw http.ResponseWriter, req *http.Request) int
 		}
 	}
 
-	if req.Header.Get("X-Requested-With") == "XMLHttpRequest" {
-		return http.StatusAccepted
+	if len(p.ApiKeys) > 0 {
+		apiKey := req.Header.Get("apiKey")
+		if apiKey != "" {
+			for _, trustedKey := range p.ApiKeys {
+				if trustedKey == apiKey {
+					return http.StatusAccepted
+				}
+			}
+		}
 	}
 
 	if session == nil {
