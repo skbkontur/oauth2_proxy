@@ -35,6 +35,8 @@ var SignatureHeaders []string = []string{
 }
 
 type OAuthProxy struct {
+	ApiKeys []string
+
 	CookieSeed     string
 	CookieName     string
 	CSRFCookieName string
@@ -176,6 +178,7 @@ func NewOAuthProxy(opts *Options, validator func(string) bool) *OAuthProxy {
 	}
 
 	return &OAuthProxy{
+		ApiKeys:        opts.ApiKeys,
 		CookieName:     opts.CookieName,
 		CSRFCookieName: fmt.Sprintf("%v_%v", opts.CookieName, "csrf"),
 		CookieSeed:     opts.CookieSecret,
@@ -657,6 +660,19 @@ func (p *OAuthProxy) Authenticate(rw http.ResponseWriter, req *http.Request) int
 		}
 	}
 
+	if apiKey := req.Header.Get("apiKey"); apiKey != "" {
+		if len(p.ApiKeys) > 0 {
+			log.Printf("processing api key: %s from: %s", apiKey, req.RemoteAddr)
+			switch p.CheckIfApiKeyIsValid(apiKey) {
+			case true:
+				log.Printf("api key: %s is valid", apiKey)
+				return http.StatusAccepted
+			default:
+				log.Printf("api key: %s is invalid", apiKey)
+			}
+		}
+	}
+
 	if session == nil {
 		return http.StatusForbidden
 	}
@@ -718,4 +734,13 @@ func (p *OAuthProxy) CheckBasicAuth(req *http.Request) (*providers.SessionState,
 		return &providers.SessionState{User: pair[0]}, nil
 	}
 	return nil, fmt.Errorf("%s not in HtpasswdFile", pair[0])
+}
+
+func (p *OAuthProxy) CheckIfApiKeyIsValid(apiKey string) bool {
+	for _, validKey := range p.ApiKeys {
+		if validKey == apiKey {
+			return true
+		}
+	}
+	return false
 }
