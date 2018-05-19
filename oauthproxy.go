@@ -729,24 +729,24 @@ func (p *OAuthProxy) CheckBasicAuth(req *http.Request) (*providers.SessionState,
 	}
 	if p.HtpasswdFile.Validate(pair[0], pair[1]) {
 		log.Printf("authenticated %q via basic auth", pair[0])
-		return &providers.SessionState{User: pair[0]}, nil
+		return &providers.SessionState{User: pair[0], BasicAuth: true}, nil
 	}
 	return nil, fmt.Errorf("%s not in HtpasswdFile", pair[0])
 }
 
 func (p *OAuthProxy) incrementAuthenticated(session *providers.SessionState) {
-	userAlias := unidecode.Unidecode(session.User)
-	userAlias = strings.Replace(userAlias, ".", "-", -1)
-	if len(session.Groups) > 0 {
+	if session.BasicAuth == true {
+		userAlias := unidecode.Unidecode(session.User)
+		userAlias = strings.Replace(userAlias, ".", "-", -1)
+		metricName := fmt.Sprintf("authenticated.BasicAuth.%s", userAlias)
+		p.StatsD.Increment(metricName)
+	} else {
 		for _, group := range session.Groups {
 			groupAlias := unidecode.Unidecode(group)
 			groupAlias = strings.Replace(groupAlias, ".", "-", -1)
-			metricName := fmt.Sprintf("authenticated.Oauth2.%s.%s", groupAlias, userAlias)
+			metricName := fmt.Sprintf("authenticated.Oauth2.%s", groupAlias)
 			p.StatsD.Increment(metricName)
 		}
-	} else {
-		metricName := fmt.Sprintf("authenticated.BasicAuth.%s", userAlias)
-		p.StatsD.Increment(metricName)
 	}
 }
 
