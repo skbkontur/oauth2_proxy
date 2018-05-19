@@ -16,6 +16,7 @@ type SessionState struct {
 	Email        string
 	User         string
 	Groups       []string
+	BasicAuth    bool
 }
 
 func (s *SessionState) IsExpired() bool {
