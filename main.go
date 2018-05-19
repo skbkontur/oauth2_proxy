@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/BurntSushi/toml"
+	"github.com/alexcesaro/statsd"
 	"github.com/mreiferson/go-options"
 )
 
@@ -80,6 +81,9 @@ func main() {
 
 	flagSet.String("signature-key", "", "GAP-Signature request signature key (algorithm:secretkey)")
 
+	flagSet.String("statsd-uri", "", "StatsD endpoint")
+	flagSet.String("statsd-namespace", "", "StatsD namespace")
+
 	flagSet.Parse(os.Args[1:])
 
 	if *showVersion {
@@ -121,6 +125,19 @@ func main() {
 		oauthproxy.DisplayHtpasswdForm = opts.DisplayHtpasswdForm
 		if err != nil {
 			log.Fatalf("FATAL: unable to open %s %s", opts.HtpasswdFile, err)
+		}
+	}
+
+	if opts.StatsDURI != "" && opts.StatsDNameSpace != "" {
+		statsdClient, err := statsd.New(
+			statsd.Address(opts.StatsDURI),
+			statsd.Prefix(opts.StatsDNameSpace),
+		)
+		if err != nil {
+			log.Printf("Failed to configure StatsD client: %s", err)
+			oauthproxy.StatsD = nil
+		} else {
+			oauthproxy.StatsD = statsdClient
 		}
 	}
 

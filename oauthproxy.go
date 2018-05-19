@@ -15,6 +15,8 @@ import (
 	"time"
 
 	"github.com/18F/hmacauth"
+	"github.com/alexcesaro/statsd"
+	"github.com/rainycape/unidecode"
 	"github.com/skbkontur/oauth2_proxy/cookie"
 	"github.com/skbkontur/oauth2_proxy/providers"
 )
@@ -72,6 +74,8 @@ type OAuthProxy struct {
 	compiledRegex       []*regexp.Regexp
 	templates           *template.Template
 	Footer              string
+
+	StatsD *statsd.Client
 }
 
 type UpstreamProxy struct {
@@ -642,6 +646,9 @@ func (p *OAuthProxy) Authenticate(rw http.ResponseWriter, req *http.Request) int
 		err := p.SaveSession(rw, req, session)
 		if err != nil {
 			log.Printf("%s %s", remoteAddr, err)
+			if p.StatsD != nil {
+				p.incrementFailed("internalServerError")
+			}
 			return http.StatusInternalServerError
 		}
 	}
@@ -658,7 +665,14 @@ func (p *OAuthProxy) Authenticate(rw http.ResponseWriter, req *http.Request) int
 	}
 
 	if session == nil {
+		if p.StatsD != nil {
+			p.incrementFailed("forbidden")
+		}
 		return http.StatusForbidden
+	}
+
+	if p.StatsD != nil {
+		p.incrementAuthenticated(session)
 	}
 
 	// At this point, the user is authenticated. proxy normally
@@ -718,4 +732,25 @@ func (p *OAuthProxy) CheckBasicAuth(req *http.Request) (*providers.SessionState,
 		return &providers.SessionState{User: pair[0]}, nil
 	}
 	return nil, fmt.Errorf("%s not in HtpasswdFile", pair[0])
+}
+
+func (p *OAuthProxy) incrementAuthenticated(session *providers.SessionState) {
+	userAlias := strings.Replace(session.User, ".", "-", -1)
+	userAlias = unidecode.Unidecode(userAlias)
+	if len(session.Groups) > 0 {
+		for _, group := range session.Groups {
+			groupAlias := strings.Replace(group, ".", "-", -1)
+			groupAlias = unidecode.Unidecode(groupAlias)
+			metricName := fmt.Sprintf("authenticated.Oauth2.%s.%s", groupAlias, userAlias)
+			p.StatsD.Increment(metricName)
+		}
+	} else {
+		metricName := fmt.Sprintf("authenticated.BasicAuth.%s", userAlias)
+		p.StatsD.Increment(metricName)
+	}
+}
+
+func (p *OAuthProxy) incrementFailed(returnedStatus string) {
+	metricName := fmt.Sprintf("failed.%s", returnedStatus)
+	p.StatsD.Increment(metricName)
 }
