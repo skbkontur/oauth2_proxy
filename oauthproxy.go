@@ -735,12 +735,12 @@ func (p *OAuthProxy) CheckBasicAuth(req *http.Request) (*providers.SessionState,
 }
 
 func (p *OAuthProxy) incrementAuthenticated(session *providers.SessionState) {
-	userAlias := strings.Replace(session.User, ".", "-", -1)
-	userAlias = unidecode.Unidecode(userAlias)
+	userAlias := unidecode.Unidecode(session.User)
+	userAlias = strings.Replace(userAlias, ".", "-", -1)
 	if len(session.Groups) > 0 {
 		for _, group := range session.Groups {
-			groupAlias := strings.Replace(group, ".", "-", -1)
-			groupAlias = unidecode.Unidecode(groupAlias)
+			groupAlias := unidecode.Unidecode(group)
+			groupAlias = strings.Replace(groupAlias, ".", "-", -1)
 			metricName := fmt.Sprintf("authenticated.Oauth2.%s.%s", groupAlias, userAlias)
 			p.StatsD.Increment(metricName)
 		}
