@@ -647,7 +647,7 @@ func (p *OAuthProxy) Authenticate(rw http.ResponseWriter, req *http.Request) int
 		if err != nil {
 			log.Printf("%s %s", remoteAddr, err)
 			if p.StatsD != nil {
-				p.incrementFailed("internalServerError")
+				p.incrementUnauthenticated(req.Method, "internalServerError")
 			}
 			return http.StatusInternalServerError
 		}
@@ -666,13 +666,13 @@ func (p *OAuthProxy) Authenticate(rw http.ResponseWriter, req *http.Request) int
 
 	if session == nil {
 		if p.StatsD != nil {
-			p.incrementFailed("forbidden")
+			p.incrementUnauthenticated(req.Method, "forbidden")
 		}
 		return http.StatusForbidden
 	}
 
 	if p.StatsD != nil {
-		p.incrementAuthenticated(session)
+		p.incrementAuthenticated(session, req.Method)
 	}
 
 	// At this point, the user is authenticated. proxy normally
@@ -734,23 +734,23 @@ func (p *OAuthProxy) CheckBasicAuth(req *http.Request) (*providers.SessionState,
 	return nil, fmt.Errorf("%s not in HtpasswdFile", pair[0])
 }
 
-func (p *OAuthProxy) incrementAuthenticated(session *providers.SessionState) {
+func (p *OAuthProxy) incrementAuthenticated(session *providers.SessionState, method string) {
 	if session.BasicAuth == true {
 		userAlias := unidecode.Unidecode(session.User)
 		userAlias = strings.Replace(userAlias, ".", "-", -1)
-		metricName := fmt.Sprintf("authenticated.BasicAuth.%s", userAlias)
+		metricName := fmt.Sprintf("authenticated.BasicAuth.%s.%s", userAlias, method)
 		p.StatsD.Increment(metricName)
 	} else {
 		for _, group := range session.Groups {
 			groupAlias := unidecode.Unidecode(group)
 			groupAlias = strings.Replace(groupAlias, ".", "-", -1)
-			metricName := fmt.Sprintf("authenticated.Oauth2.%s", groupAlias)
+			metricName := fmt.Sprintf("authenticated.Oauth2.%s.%s", groupAlias, method)
 			p.StatsD.Increment(metricName)
 		}
 	}
 }
 
-func (p *OAuthProxy) incrementFailed(returnedStatus string) {
-	metricName := fmt.Sprintf("failed.%s", returnedStatus)
+func (p *OAuthProxy) incrementUnauthenticated(method string, returnedStatus string) {
+	metricName := fmt.Sprintf("unauthenticated.%s.resultedWith.%s", method, returnedStatus)
 	p.StatsD.Increment(metricName)
 }
