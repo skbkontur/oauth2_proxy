@@ -94,12 +94,6 @@
 			"revisionTime": "2016-12-29T19:00:02Z"
 		},
 		{
-			"checksumSHA1": "iJkzMxL25EBhdFbYGiQNTcXJt2s=",
-			"path": "github.com/rainycape/unidecode",
-			"revision": "cb7f23ec59bec0d61b19c56cd88cee3d0cc1870c",
-			"revisionTime": "2015-09-07T02:38:54Z"
-		},
-		{
 			"checksumSHA1": "Y+HGqEkYM15ir+J93MEaHdyFy0c=",
 			"path": "golang.org/x/net/context",
 			"revision": "5961165da77ad3a2abf3a77ea904c13a76b0b073",

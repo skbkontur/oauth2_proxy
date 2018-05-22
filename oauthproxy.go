@@ -645,9 +645,6 @@ func (p *OAuthProxy) Authenticate(rw http.ResponseWriter, req *http.Request) int
 		err := p.SaveSession(rw, req, session)
 		if err != nil {
 			log.Printf("%s %s", remoteAddr, err)
-			if p.StatsD != nil {
-				p.incrementUnauthenticated(req.Method, "internalServerError")
-			}
 			return http.StatusInternalServerError
 		}
 	}
@@ -660,18 +657,18 @@ func (p *OAuthProxy) Authenticate(rw http.ResponseWriter, req *http.Request) int
 		session, err = p.CheckBasicAuth(req)
 		if err != nil {
 			log.Printf("%s %s", remoteAddr, err)
+			if p.StatsD != nil {
+				p.incrementBasicFailed(req.Method)
+			}
 		}
 	}
 
 	if session == nil {
-		if p.StatsD != nil {
-			p.incrementUnauthenticated(req.Method, "forbidden")
-		}
 		return http.StatusForbidden
 	}
 
 	if p.StatsD != nil {
-		p.incrementAuthenticated(session, req.Method)
+		p.incrementBasicSuccess(session.User, req.Method)
 	}
 
 	// At this point, the user is authenticated. proxy normally
