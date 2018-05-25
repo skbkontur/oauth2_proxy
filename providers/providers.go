@@ -1,6 +1,8 @@
 package providers
 
 import (
+	"net/http"
+
 	"github.com/skbkontur/oauth2_proxy/cookie"
 )
 
@@ -9,7 +11,7 @@ type Provider interface {
 	GetEmailAddress(*SessionState) (string, error)
 	Redeem(string, string) (*SessionState, error)
 	ValidateGroup(string) bool
-	ValidateGroupByHost(string, []string) bool
+	ValidateRequest(*http.Request, *SessionState) (bool, error)
 	ValidateSessionState(*SessionState) bool
 	GetLoginURL(redirectURI, finalRedirect string) string
 	RefreshSessionIfNeeded(*SessionState) (bool, error)

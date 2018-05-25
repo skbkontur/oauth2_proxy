@@ -112,8 +112,8 @@ func (p *ProviderData) ValidateGroup(email string) bool {
 	return true
 }
 
-func (p *ProviderData) ValidateGroupByHost(string, []string) bool {
-	return true
+func (p *ProviderData) ValidateRequest(*http.Request, *SessionState) (bool, error) {
+	return true, nil
 }
 
 func (p *ProviderData) ValidateSessionState(s *SessionState) bool {

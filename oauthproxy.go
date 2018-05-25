@@ -556,7 +556,7 @@ func (p *OAuthProxy) OAuthCallback(rw http.ResponseWriter, req *http.Request) {
 	}
 
 	// set cookie, or deny
-	if p.Validator(session.Email) && p.provider.ValidateGroup(session.Email) && p.provider.ValidateGroupByHost(strings.Split(req.Host, ":")[0], session.Groups) {
+	if p.Validator(session.Email) && p.provider.ValidateGroup(session.Email) {
 		log.Printf("%s authentication complete %s", remoteAddr, session)
 		err := p.SaveSession(rw, req, session)
 		if err != nil {
@@ -591,6 +591,8 @@ func (p *OAuthProxy) Proxy(rw http.ResponseWriter, req *http.Request) {
 		} else {
 			p.SignInPage(rw, req, http.StatusForbidden)
 		}
+	} else if status == http.StatusUnauthorized {
+		p.ErrorPage(rw, http.StatusUnauthorized, "Not authorized", "You have no access to "+req.RequestURI)
 	} else {
 		p.serveMux.ServeHTTP(rw, req)
 	}
@@ -665,6 +667,15 @@ func (p *OAuthProxy) Authenticate(rw http.ResponseWriter, req *http.Request) int
 
 	if session == nil {
 		return http.StatusForbidden
+	}
+
+	isValidRequest, err := p.provider.ValidateRequest(req, session)
+	if !isValidRequest {
+		if err == nil {
+			// request validated without errors but access is not authorized
+			return http.StatusUnauthorized
+		}
+		p.ClearSessionCookie(rw, req)
 	}
 
 	// At this point, the user is authenticated. proxy normally
