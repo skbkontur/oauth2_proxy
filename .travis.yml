@@ -9,7 +9,7 @@ addons:
 install:
 - gem install fpm
 script:
-- make prepare
+- make test
 - make build
 - make rpm
 before_deploy:

@@ -3,13 +3,10 @@ RELEASE := $(shell git describe --always --tags | awk -F- '{ if ($$2) dot="."} E
 
 .PHONY: build test
 
-default: clean prepare test build
+default: clean test build
 
-test: prepare
-
-prepare:
-	go get -u "github.com/kardianos/govendor"
-	govendor sync
+test:
+	go test -timeout 60s ./...
 
 clean:
 	rm -rf build
