@@ -1,7 +1,7 @@
 language: go
 sudo: false
 go:
-- "1.10"
+- "1.13"
 
 addons:
   apt:
@@ -9,7 +9,7 @@ addons:
 install:
 - gem install fpm
 script:
-- make prepare
+- make test
 - make build
 - make rpm
 before_deploy:
