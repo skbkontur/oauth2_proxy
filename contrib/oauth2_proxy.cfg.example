@@ -71,6 +71,7 @@
 ##            (ie: 1h means tokens are refreshed on request 1hr+ after it was set)
 ## Secure   - secure cookies are only sent by the browser of a HTTPS connection (recommended)
 ## HttpOnly - httponly cookies are not readable by javascript (recommended)
+## SameSite - samesite cookies for restrict cross-site requests (None, Strict, Lax). By default not set
 # cookie_name = "_oauth2_proxy"
 # cookie_secret = ""
 # cookie_domain = ""
@@ -78,3 +79,4 @@
 # cookie_refresh = ""
 # cookie_secure = true
 # cookie_httponly = true
+# cookie_same_site = ""

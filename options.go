@@ -47,6 +47,7 @@ type Options struct {
 	CookieRefresh  time.Duration `flag:"cookie-refresh" cfg:"cookie_refresh" env:"OAUTH2_PROXY_COOKIE_REFRESH"`
 	CookieSecure   bool          `flag:"cookie-secure" cfg:"cookie_secure"`
 	CookieHttpOnly bool          `flag:"cookie-httponly" cfg:"cookie_httponly"`
+	CookieSameSite string        `flag:"cookie-same-site" cfg:"cookie_same_site" env:"OAUTH2_SAME_SITE"`
 
 	Upstreams             []string `flag:"upstream" cfg:"upstreams"`
 	SkipAuthRegex         []string `flag:"skip-auth-regex" cfg:"skip_auth_regex"`
@@ -201,6 +202,12 @@ func (o *Options) Validate() error {
 				"cookie_expire (%s)",
 			o.CookieRefresh.String(),
 			o.CookieExpire.String()))
+	}
+
+	if o.CookieSameSite != "Lax" && o.CookieSameSite != "Strict" && o.CookieSameSite != "None" && o.CookieSameSite != "" {
+		msgs = append(msgs, fmt.Sprintf(
+			"cookie_same_site (%s) can be empthy, Lax, Strict or None",
+			o.CookieSameSite))
 	}
 
 	if len(o.GoogleGroups) > 0 || o.GoogleAdminEmail != "" || o.GoogleServiceAccountJSON != "" {

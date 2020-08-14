@@ -42,6 +42,7 @@ type OAuthProxy struct {
 	CookieDomain   string
 	CookieSecure   bool
 	CookieHttpOnly bool
+	CookieSameSite http.SameSite
 	CookieExpire   time.Duration
 	CookieRefresh  time.Duration
 	Validator      func(string) bool
@@ -90,6 +91,19 @@ func (u *UpstreamProxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		u.auth.SignRequest(r)
 	}
 	u.handler.ServeHTTP(w, r)
+}
+
+func stringToSomeSite(s string) http.SameSite {
+	switch s {
+	case "Lax":
+		return http.SameSiteLaxMode
+	case "Strict":
+		return http.SameSiteStrictMode
+	case "None":
+		return http.SameSiteNoneMode
+	default:
+		return http.SameSiteDefaultMode
+	}
 }
 
 func NewReverseProxy(target *url.URL) (proxy *httputil.ReverseProxy) {
@@ -167,7 +181,7 @@ func NewOAuthProxy(opts *Options, validator func(string) bool) *OAuthProxy {
 		refresh = fmt.Sprintf("after %s", opts.CookieRefresh)
 	}
 
-	log.Printf("Cookie settings: name:%s secure(https):%v httponly:%v expiry:%s domain:%s refresh:%s", opts.CookieName, opts.CookieSecure, opts.CookieHttpOnly, opts.CookieExpire, domain, refresh)
+	log.Printf("Cookie settings: name:%s secure(https):%v httponly:%v samesite: %s expiry:%s domain:%s refresh:%s", opts.CookieName, opts.CookieSecure, opts.CookieHttpOnly, opts.CookieSameSite, opts.CookieExpire, domain, refresh)
 
 	var cipher *cookie.Cipher
 	if opts.PassAccessToken || (opts.CookieRefresh != time.Duration(0)) {
@@ -185,6 +199,7 @@ func NewOAuthProxy(opts *Options, validator func(string) bool) *OAuthProxy {
 		CookieDomain:   opts.CookieDomain,
 		CookieSecure:   opts.CookieSecure,
 		CookieHttpOnly: opts.CookieHttpOnly,
+		CookieSameSite: stringToSomeSite(opts.CookieSameSite),
 		CookieExpire:   opts.CookieExpire,
 		CookieRefresh:  opts.CookieRefresh,
 		Validator:      validator,
@@ -288,6 +303,7 @@ func (p *OAuthProxy) makeCookie(req *http.Request, name string, value string, ex
 		Domain:   domain,
 		HttpOnly: p.CookieHttpOnly,
 		Secure:   p.CookieSecure,
+		SameSite: p.CookieSameSite,
 		Expires:  now.Add(expiration),
 	}
 }
